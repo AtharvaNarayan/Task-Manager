@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Manager Pro</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #283048, #859398);
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            text-align: center;
+            color: #283048;
+            font-size: 2.5rem;
+            font-weight: 600;
+        }
+
+        .auth-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .auth-container input {
+            padding: 10px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+
+        .auth-container button {
+            padding: 10px 20px;
+            font-size: 14px;
+            border: none;
+            background: #1d976c;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"], input[type="date"], textarea, select {
+            flex: 1;
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            outline: none;
+        }
+
+        button {
+            background: linear-gradient(135deg, #1d976c, #93f9b9);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 8px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .stats div {
+            flex: 1;
+            text-align: center;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-bar {
+            margin-bottom: 20px;
+            display: flex;
+        }
+
+        .search-bar input {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px 0 0 8px;
+            border: 1px solid #ccc;
+        }
+
+        .search-bar button {
+            padding: 12px;
+            border-radius: 0 8px 8px 0;
+            border: 1px solid #ccc;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        li.completed {
+            text-decoration: line-through;
+        }
+
+        .filter {
+            margin-bottom: 20px;
+        }
+
+        .filter select {
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Task Manager Pro</h1>
+
+        <div class="auth-container">
+            <input type="text" id="username" placeholder="Enter your name">
+            <button id="auth-button">Log In</button>
+        </div>
+
+        <div class="stats">
+            <div>
+                <h3>Total Tasks</h3>
+                <p id="total-tasks">0</p>
+            </div>
+            <div>
+                <h3>Completed Tasks</h3>
+                <p id="completed-tasks">0</p>
+            </div>
+            <div>
+                <h3>Pending Tasks</h3>
+                <p id="pending-tasks">0</p>
+            </div>
+        </div>
+
+        <form id="task-form">
+            <input type="text" id="task-name" placeholder="Task name..." required>
+            <textarea id="task-desc" placeholder="Description..."></textarea>
+            <input type="date" id="task-date">
+            <select id="task-priority">
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+            </select>
+            <button type="submit">Add Task</button>
+        </form>
+
+        <div class="search-bar">
+            <input type="text" id="search-task" placeholder="Search tasks...">
+            <button id="search-button">Search</button>
+        </div>
+
+        <div class="filter">
+            <label for="filter-tasks">Filter by:</label>
+            <select id="filter-tasks">
+                <option value="all">All</option>
+                <option value="completed">Completed</option>
+                <option value="pending">Pending</option>
+            </select>
+        </div>
+
+        <ul id="task-list"></ul>
+    </div>
+
+    <script>
+        const taskForm = document.getElementById('task-form');
+        const taskName = document.getElementById('task-name');
+        const taskDesc = document.getElementById('task-desc');
+        const taskDate = document.getElementById('task-date');
+        const taskPriority = document.getElementById('task-priority');
+        const taskList = document.getElementById('task-list');
+        const totalTasks = document.getElementById('total-tasks');
+        const completedTasks = document.getElementById('completed-tasks');
+        const pendingTasks = document.getElementById('pending-tasks');
+        const searchTask = document.getElementById('search-task');
+        const searchButton = document.getElementById('search-button');
+        const filterTasks = document.getElementById('filter-tasks');
+
+        let tasks = [];
+
+        taskForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const task = {
+                name: taskName.value,
+                desc: taskDesc.value,
+                date: taskDate.value,
+                priority: taskPriority.value,
+                completed: false
+            };
+
+            tasks.push(task);
+            renderTasks();
+            updateStats();
+            taskForm.reset();
+        });
+
+        function renderTasks() {
+            taskList.innerHTML = '';
+
+            tasks.forEach((task, index) => {
+                const li = document.createElement('li');
+                li.textContent = `${task.name} - ${task.date || 'No Date'} (${task.priority})`;
+                if (task.completed) li.classList.add('completed');
+
+                const completeButton = document.createElement('button');
+                completeButton.textContent = 'Complete';
+                completeButton.addEventListener('click', () => {
+                    task.completed = !task.completed;
+                    renderTasks();
+                    updateStats();
+                });
+
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Delete';
+                deleteButton.addEventListener('click', () => {
+                    tasks.splice(index, 1);
+                    renderTasks();
+                    updateStats();
+                });
+
+                li.appendChild(completeButton);
+                li.appendChild(deleteButton);
+                taskList.appendChild(li);
+            });
+        }
+
+        function updateStats() {
+            const total = tasks.length;
+            const completed = tasks.filter(task => task.completed).length;
+            const pending = total - completed;
+
+            totalTasks.textContent = total;
+            completedTasks.textContent = completed;
+            pendingTasks.textContent = pending;
+        }
+    </script>
+</body>
+</html>   
